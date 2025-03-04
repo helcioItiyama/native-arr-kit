@@ -2,49 +2,51 @@ package expo.modules.nativearrkit
 
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
-import java.net.URL
+import expo.modules.kotlin.jni.JavaScriptFunction
 
 class NativeArrKitModule : Module() {
-  // Each module class must implement the definition function. The definition consists of components
-  // that describes the module's functionality and behavior.
-  // See https://docs.expo.dev/modules/module-api for more details about available components.
   override fun definition() = ModuleDefinition {
-    // Sets the name of the module that JavaScript code will use to refer to the module. Takes a string as an argument.
-    // Can be inferred from module's class name, but it's recommended to set it explicitly for clarity.
-    // The module will be accessible from `requireNativeModule('NativeArrKit')` in JavaScript.
     Name("NativeArrKit")
 
-    // Sets constant properties on the module. Can take a dictionary or a closure that returns a dictionary.
-    Constants(
-      "PI" to Math.PI
-    )
-
-    // Defines event names that the module can send to JavaScript.
-    Events("onChange")
-
-    // Defines a JavaScript synchronous function that runs the native code on the JavaScript thread.
-    Function("hello") {
-      "Hello world! 👋"
+    Function("zip") { arr1: List<Any>, arr2: List<Any> -> 
+      arr1.zip(arr2) 
     }
 
-    // Defines a JavaScript function that always returns a Promise and whose native code
-    // is by default dispatched on the different thread than the JavaScript runtime runs on.
-    AsyncFunction("setValueAsync") { value: String ->
-      // Send an event to JavaScript.
-      sendEvent("onChange", mapOf(
-        "value" to value
-      ))
+    Function("partition") { arr: List<Any>, predicate: JavaScriptFunction<Boolean> -> 
+      arr.partition { predicate.invoke(it) } 
     }
 
-    // Enables the module to be used as a native view. Definition components that are accepted as part of
-    // the view definition: Prop, Events.
-    View(NativeArrKitView::class) {
-      // Defines a setter for the `url` prop.
-      Prop("url") { view: NativeArrKitView, url: URL ->
-        view.webView.loadUrl(url.toString())
-      }
-      // Defines an event that the view can send to JavaScript.
-      Events("onLoad")
+    Function("dropFirst") { arr: List<Any>, n: Int -> 
+      arr.drop(n) 
+    }
+
+    Function("dropLast") { arr: List<Any>, n: Int -> 
+      arr.dropLast(n) 
+    }
+
+    Function("dropWhile") { arr: List<Any>, predicate: JavaScriptFunction<Boolean> -> 
+      arr.dropWhile { predicate.invoke(it) }
+    }
+
+    Function("takeFirst") { arr: List<Any>, n: Int -> 
+      arr.take(n) 
+    }
+
+    Function("takeLast") { arr: List<Any>, n: Int -> 
+      arr.takeLast(n) 
+    }
+
+    Function("takeWhile") { arr: List<Any>, predicate: JavaScriptFunction<Boolean> -> 
+      arr.takeWhile { predicate.invoke(it) }
+    }
+
+    Function("removeAt") { arr: List<Any>, index: Int -> 
+      arr.toMutableList().apply { removeAt(index) }
+    }
+
+    Function("shuffle") { arr: List<Any> ->
+      arr.shuffled() 
     }
   }
 }
+

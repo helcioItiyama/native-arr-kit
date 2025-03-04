@@ -1,48 +1,54 @@
 import ExpoModulesCore
 
 public class NativeArrKitModule: Module {
-  // Each module class must implement the definition function. The definition consists of components
-  // that describes the module's functionality and behavior.
-  // See https://docs.expo.dev/modules/module-api for more details about available components.
   public func definition() -> ModuleDefinition {
-    // Sets the name of the module that JavaScript code will use to refer to the module. Takes a string as an argument.
-    // Can be inferred from module's class name, but it's recommended to set it explicitly for clarity.
-    // The module will be accessible from `requireNativeModule('NativeArrKit')` in JavaScript.
     Name("NativeArrKit")
 
-    // Sets constant properties on the module. Can take a dictionary or a closure that returns a dictionary.
-    Constants([
-      "PI": Double.pi
-    ])
-
-    // Defines event names that the module can send to JavaScript.
-    Events("onChange")
-
-    // Defines a JavaScript synchronous function that runs the native code on the JavaScript thread.
-    Function("hello") {
-      return "Hello world! 👋"
+    Function("zip") { (arr1: [Any], arr2: [Any]) -> [[Any]] in 
+      zip(arr1, arr2).map { [$0.0, $0.1] }
     }
 
-    // Defines a JavaScript function that always returns a Promise and whose native code
-    // is by default dispatched on the different thread than the JavaScript runtime runs on.
-    AsyncFunction("setValueAsync") { (value: String) in
-      // Send an event to JavaScript.
-      self.sendEvent("onChange", [
-        "value": value
-      ])
+    Function("partition") { (arr: [Any], predicate: JavaScriptFunction<Bool>) -> [[Any]] in
+      var mutableArr = arr
+      let i = mutableArr.partition { (try? predicate.call($0)) ?? false }
+      return [Array(mutableArr[i...]), Array(mutableArr[..<i])]
     }
 
-    // Enables the module to be used as a native view. Definition components that are accepted as part of the
-    // view definition: Prop, Events.
-    View(NativeArrKitView.self) {
-      // Defines a setter for the `url` prop.
-      Prop("url") { (view: NativeArrKitView, url: URL) in
-        if view.webView.url != url {
-          view.webView.load(URLRequest(url: url))
-        }
-      }
-
-      Events("onLoad")
+    Function("dropFirst") { (arr: [Any], n: Int) -> [Any] in
+      Array(arr.dropFirst(n))
     }
+
+    Function("dropLast") { (arr: [Any], n: Int) -> [Any] in
+      Array(arr.dropLast(n))
+    }
+
+    Function("dropWhile") { (arr: [Any], predicate: JavaScriptFunction<Bool>) -> [Any] in
+      Array(arr.drop { (try? predicate.call($0)) ?? false })
+    }
+
+    Function("takeFirst") { (arr: [Any], n: Int) -> [Any] in
+      Array(arr.prefix(n))
+    }
+
+    Function("takeLast") { (arr: [Any], n: Int) -> [Any] in
+      Array(arr.suffix(n))
+    }
+
+    Function("takeWhile") { (arr: [Any], predicate: JavaScriptFunction<Bool>) -> [Any] in
+      Array(arr.prefix { (try? predicate.call($0)) ?? false })
+    }
+
+    Function("removeAt") { (arr: [Any], index: Int) -> [Any] in
+      var mutableArr = arr
+      mutableArr.remove(at: index)
+      return mutableArr
+    }
+
+    Function("shuffle") { (arr: [Any]) -> [Any] in
+      var mutableArr = arr
+      mutableArr.shuffle()
+      return mutableArr
+    }
+
   }
 }
